@@ -6,9 +6,9 @@ $FolderOut="C:\Aplicaciones\Umango\clientes\casinobsas\out\"
 #Ubicacion del programa conversor de archivo.
 $GS="C:\Aplicaciones\Umango\clientes\casinobsas\Scripts\pdf_to_jpg\bin\gswin32c.exe"
 #Configuracion de calidad de img.
-$DPI=300
+$DPI=600
 $ALPHABITS=2
-$QUALITY=80
+$QUALITY=100
 $FIRSTPAGE=1
 $LASTPAGE=9999
 $MEMORY=300
