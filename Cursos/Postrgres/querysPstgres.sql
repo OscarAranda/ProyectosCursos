@@ -141,3 +141,49 @@ ALTER TABLE public.viaje
     ON UPDATE CASCADE
     ON DELETE CASCADE
     NOT VALID;
+--foreing key, relacion entre viaje y tren
+ALTER TABLE public.viaje
+    ADD CONSTRAINT viaje_pasajero_fkey FOREIGN KEY (id_pasajero)
+    REFERENCES public.pasajero (id) MATCH SIMPLE
+    ON UPDATE CASCADE
+    ON DELETE CASCADE
+    NOT VALID;
+--insert
+INSERT INTO public.estacion(
+    nombre, direccion)
+    VALUES ('Estacion norte','St 100# 112');
+
+INSERT INTO public.tren(
+    capacidad, modelo)
+    VALUES (100, 'renault');
+
+INSERT INTO public.trayecto(
+    id_estacion, id_tren, nombre)
+    VALUES (1, 2, 'Ruta 2');
+
+--INNER join
+SELECT * FROM pasajero
+JOIN viaje ON (viaje.id_pasajero=pasajero.id);
+-- left join 
+SELECT * FROM pasajero
+LEFT JOIN viaje ON (viaje.id_pasajero=pasajero.id)
+WHERE viaje.id IS NULL;
+--returninn
+INSERT INTO public.estacion(nombre, direccion) VALUES ('RET', 'RETORI') RETURNING *;
+-- LIKE - ILIKE, la diferencia es que ilike no diferencia ente may y min a la hora de hacer busqueda
+SELECT nombre FROM public.pasajero WHERE nombre ILIKE 'o%';
+-- case
+SELECT id, nombre, fecha_nacimiento, direccion_residencia, 
+CASE 
+WHEN fecha_nacimiento > '2011-01-01' THEN
+'Niño'
+ELSE
+'Mayor'
+END,
+CASE 
+WHEN nombre ILIKE 'o%' THEN 
+'Nombre'
+ELSE
+'No comienza con o'
+END AS inicial
+FROM pasajero;
