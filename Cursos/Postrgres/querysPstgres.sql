@@ -1,5 +1,6 @@
 -- connect postgres 
 psql -U postgres -h cbc-server-app
+Sispcadmin670.
 SELECT VERSION();
 \h -- ayuda
 \h comnado -- ayuda del comando especifico
@@ -18,14 +19,17 @@ SELECT VERSION();
 \ef -- editor de funciones
 \timming -- activar o desactivar el tiempo de respusta de las consultas
 \q --cerra consola
+
+
 -- Crear DB transporte
-CREATE DATABASE transporte
+CREATE DATABASE ovc
     WITH
     OWNER = postgres
     ENCODING = 'UTF8'
     CONNECTION LIMIT = -1;
 -- crear DB pasajer
-CREATE TABLE public.pasajero
+CREATE TABLE public.pasajeroq
+
 (
     id serial,
     nombre character varying(100),
@@ -187,3 +191,115 @@ ELSE
 'No comienza con o'
 END AS inicial
 FROM pasajero;
+--VISTAS
+--crear vista
+CREATE OR REPLACE VIEW public.menor_mayor_view
+AS 
+SELECT id, nombre, fecha_nacimiento, direccion_residencia, 
+CASE 
+WHEN fecha_nacimiento > '2011-01-01' THEN
+'Niño'
+ELSE
+'Mayor'
+END,
+CASE 
+WHEN nombre ILIKE 'o%' THEN 
+'Nombre'
+ELSE
+'No comienza con o'
+END AS inicial
+FROM pasajero;
+--VISTA MATERIALIZADA
+CREATE MATERIALIZED VIEW public.despues_noche_mview
+AS
+SELECT * FROM viaje WHERE inicio > '2000-01-01'
+WITH NO DATA;
+ALTER TABLE public.despues_noche_mview
+    OWNER TO postgres;
+-- Para cargar la vista con datos q
+ REFRESH MATERIALIZED VIEW despues_noche_mview;
+ -- hassta que no se carga no muestra datos tampoco se actualiza- Se usan para consultar datos que no cambian por lo general
+
+ -- PL
+ --Probar parametros de funcion PL
+DO $$ 
+ DECLARE
+    rec record := NULL;
+    contador INTEGER := 0;
+ BEGIN
+ 	FOR rec IN SELECT * FROM pasajero LOOP
+	    RAISE NOTICE 'Un pasajero se llama %',rec.nombre;
+        contador := contador + 1;
+	END LOOP;
+    RAISE NOTICE 'Conteo es %', contador;
+ END
+ $$
+ --Crear funcion
+ CREATE FUNCTION primerPL()
+ RETURNS void
+ AS $$
+ DECLARE
+    rec record := NULL;
+    contador INTEGER := 0;
+ BEGIN
+ 	FOR rec IN SELECT * FROM pasajero LOOP
+	    RAISE NOTICE 'Un pasajero se llama %',rec.nombre;
+        contador := contador + 1;
+	END LOOP;
+    RAISE NOTICE 'Conteo es %', contador;
+ END
+ $$
+LANGUAGE PLPGSQL;
+--Retorna el conteo de pasajeros
+CREATE OR REPLACE FUNCTION primerPL()
+ 	RETURNS integer
+	LANGUAGE 'plpgsql'
+ 	COST 100
+	VOLATILE
+ AS $$
+ DECLARE
+    rec record := NULL;
+    contador INTEGER := 0;
+ BEGIN
+ 	FOR rec IN SELECT * FROM pasajero LOOP
+	    RAISE NOTICE 'Un pasajero se llama %',rec.nombre;
+        contador := contador + 1;
+	END LOOP;
+    INSERT INTO cont_pasajero (total,tiempo)
+	VALUES (contador, now());
+	RETURN contador;
+ END
+ $$
+ 
+
+-- insert entabla conteo pasajero cuando se inserta en pasajero (Trigger)
+CREATE FUNCTION public.primerpl()
+    RETURNS trigger
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE NOT LEAKPROOF
+AS $BODY$
+ DECLARE
+    rec record;
+    contador INTEGER := 0;
+ BEGIN
+ 	FOR rec IN SELECT * FROM pasajero LOOP
+        contador := contador + 1;
+	END LOOP;
+    INSERT INTO cont_pasajero (total,tiempo)
+	VALUES (contador, now());
+	RETURN NEW;
+ END
+ $BODY$;
+
+ALTER FUNCTION public.primerpl()
+    OWNER TO postgres;
+
+    --Crea TRIGGER
+    
+CREATE TRIGGER mitrigger
+    AFTER INSERT
+    ON public.pasajero
+    FOR EACH ROW
+    EXECUTE PROCEDURE public.primerpl();
+
