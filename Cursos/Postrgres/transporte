@@ -1,0 +1,17 @@
+SELECT id, nombre, fecha_nacimiento, direccion_residencia, 
+CASE 
+WHEN fecha_nacimiento > '2011-01-01' THEN
+'Niño'
+ELSE
+'Mayor'
+END,
+CASE 
+WHEN nombre ILIKE 'o%' THEN 
+'Nombre'
+ELSE
+'No comienza con o'
+END AS inicial
+FROM pasajero;
+\d
+\l
+\s transporte
