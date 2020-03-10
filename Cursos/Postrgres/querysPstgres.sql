@@ -303,3 +303,5 @@ CREATE TRIGGER mitrigger
     FOR EACH ROW
     EXECUTE PROCEDURE public.primerpl();
 
+insert into public.tables (menu_id, table_state, restaurant_id, waiter_id,table_number) VALUES (2,'true',113,1,205);
+INSERT INTO public.waiters (waiter_name, waiter_number, restaurant_id) VALUES ('josefa cañete',1, 113);
