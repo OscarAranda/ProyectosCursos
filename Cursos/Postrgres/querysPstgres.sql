@@ -1,6 +1,14 @@
 -- connect postgres 
 psql -U postgres -h cbc-server-app
 Sispcadmin670.
+User app 
+ovc_user_query
+--pass: CBCsqlUser*
+CREATE ROLE ovc_user_query;
+ALTER ROLE ovc_user_query WITH LOGIN;
+ALTER ROLE ovc_user_query WITH SUPERUSER;
+ALTER ROLE ovc_user_query WITH PASSWORD 'CBCsqlUser*';
+
 SELECT VERSION();
 \h -- ayuda
 \h comnado -- ayuda del comando especifico
@@ -17,7 +25,7 @@ SELECT VERSION();
 \i nombre archivo -- ejecuta comandos guardados
 \e -- abrir editor 
 \ef -- editor de funciones
-\timming -- activar o desactivar el tiempo de respusta de las consultas
+\timing -- activar o desactivar el tiempo de respusta de las consultas
 \q --cerra consola
 
 
@@ -166,6 +174,14 @@ INSERT INTO public.trayecto(
     VALUES (1, 2, 'Ruta 2');
 
 --INNER join
+
+  SELECT u.first_name, u.last_name, u.email, o.status 
+    FROM users u 
+    JOIN orders o 
+    ON u.id=o.user_id
+    WHERE o.id=1;
+
+
 SELECT * FROM pasajero
 JOIN viaje ON (viaje.id_pasajero=pasajero.id);
 -- left join 
@@ -305,3 +321,139 @@ CREATE TRIGGER mitrigger
 
 insert into public.tables (menu_id, table_state, restaurant_id, waiter_id,table_number) VALUES (2,'true',113,1,205);
 INSERT INTO public.waiters (waiter_name, waiter_number, restaurant_id) VALUES ('josefa cañete',1, 113);
+
+
+CREATE TABLE public.orders
+
+(
+    id serial,
+    dateCrated date,
+    direccion_residencia character varying,
+    fecha_nacimiento date,
+    CONSTRAINT pasajero_pkey PRIMARY KEY (id)
+)
+WITH (
+    OIDS = FALSE
+);
+
+ALTER TABLE public.pasajero
+    OWNER to postgres;   
+
+
+    Cliente: Integracion Energetica Argentina SA (IEASA)
+    Licencia PaperCut MF
+    Equipos
+    SHARP MFP: 20
+    Lexmark Printer: 09
+    Mantenimiento: 24 y 36 meses
+
+
+
+
+
+ SELECT d.id, o.id orden, o.date fecha, o.status, l.id, u.first_name, l.product_id, p.product_name producto,
+ p.price 
+    FROM orders_detail d
+    JOIN orders o
+    ON o.id=d.order_id 
+    JOIN orders_list l
+    ON l.order_id=o.id
+    JOIN users u 
+    ON u.id=o.user_id
+    JOIN products p 
+    ON l.product_id=p.id
+    WHERE d.id=1 and l.order_id=1;
+
+
+
+SELECT COALESCE(p.price)
+FROM products;
+    
+
+    DO $$
+DECLARE 
+rec record;
+
+BEGIN
+FOR rec IN SELECT sum(products) 
+	FROM orders_list l
+	join products  
+	ON products.id=l.product_id loop
+	--WHERE l.order_id=1 LOOP 
+	RAISE NOTICE 'el precio es %', rec.price;
+END LOOP;
+END
+$$
+
+
+
+INSERT INTO orders (status, user_id) VALUES ('t',15);
+INSERT INTO orders_detail (order_id) VALUES (lastval());
+
+
+INSERT INTO orders_detail (order_id) SELECT "id" MAX (code) from orders;
+
+--Cuando se inserta una nueva orden, se debe generar automaticamente un nueva order_detail 
+INSERT INTO orders (status, user_id) VALUES ('t',15);
+INSERT INTO orders_detail (order_id) SELECT  MAX(id) from orders;
+
+SELECT u.email AS usuario, 
+FROM orders_detail d 
+JOIN orders_list l 
+ON d.id=l.order_id
+JOIN products p 
+ON p.id=l.product_id
+JOIN orders o 
+ON o.id=d.order_id
+JOIN users u
+ON u.id=o.user_id 
+WHERE o.id=1
+
+
+
+---------------------------------------------------------
+--meeting
+USE meeting
+CREATE TABLE meetings(
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    createdAt datetime NOT NULL,
+    meetingDate DATE NOT NULL,
+    meetingTime TIME NOT NULL,
+    owner VARCHAR(30) NOT NULL,
+    idHash VARCHAR(MAX) NOT NULL
+);
+
+CREATE TABLE meetingTypes (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    type VARCHAR(20) NOT NULL
+);
+
+CREATE TABLE registerUsers (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    registered BIT NOT NULL DEFAULT(0),
+    connected BIT NOT NULL DEFAULT(0),
+    idUserMeeting INT NOT NULL
+);
+
+CREATE TABLE userMeetings (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    idMeeting INT NOT NULL,
+    idUser INT NOT NULL,
+    idRegister INT NOT NULL,
+    FOREIGN KEY (idMeeting) REFERENCES meetings(id),
+    FOREIGN KEY (idUser) REFERENCES users(id),
+    FOREIGN KEY (idRegister) REFERENCES registerUsers(id)
+;)
+
+ALTER TABLE meetings ADD 
+idTypes INT NOT NULL,
+FOREIGN KEY (idtypes) REFERENCES types(id);
+
+ALTER TABLE registerUsers
+FOREIGN KEY (idUserMeeting) REFERENCES userMeetings(id)
+
+INSERT INTO meetings (createdAt, meetingDate,meetingTime,owner,idHash,idTypes)
+VALUES (GETDATE(), '26/06/2020', '19:00:00','Oscar','cacaf3121feda3dacadc23ddcsdc33', 1);}
+
+INSERT INTO meetingTypes (type)
+VALUES ('Comercial'),('Tecnico');
